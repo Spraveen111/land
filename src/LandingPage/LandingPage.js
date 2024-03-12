@@ -1,22 +1,18 @@
 import React from 'react';
-import { MdOutlinePhoneAndroid } from "react-icons/md";
+import { MdCleaningServices, MdOutlinePhoneAndroid } from "react-icons/md";
 import { MdOutlineMail } from "react-icons/md";
 import { SiGooglemaps } from "react-icons/si";
 import { FaSquareFacebook } from "react-icons/fa6";
 import { FaLinkedin } from "react-icons/fa";
 import { FaInstagramSquare } from "react-icons/fa";
+import axios from "axios";
 import "./LandingPage.css";
 import { useState } from "react";
 
 function LandingPage() {
   const [page, setPage] = useState(1);
-  const iNeedToBeProximityData = [
-    { value: '', label: '--Select an option--' },
-    { value: 'Corporate Headquarters', label: 'Corporate Headquarters' },
-    { value: 'University', label: 'University' },
-    { value: 'Hospitals', label: 'Hospitals' },
-    { value: 'No specific area required', label: 'No specific area required' },
-  ];
+  const iNeedToBeProximityData = [{ value: '', label: '--Select an option--' },{ value: 'Corporate Headquarters', label: 'Corporate Headquarters' },{ value: 'University', label: 'University' },{ value: 'Hospitals', label: 'Hospitals' },{ value: 'No specific area required', label: 'No specific area required' },];
+
   const stayLengthFields=[
     {value:'',label: '--Select an option--'},
     {value:"30-60 days", label:"30-60 days"},
@@ -49,9 +45,14 @@ function LandingPage() {
     transitionStLouisFields:[],
     bedrooms:[],
     lookingForBedroomType:[],
-    handleHowDoYouHearAboutUs:"",
-    
+    howDoYouHearAboutUs:"",
+    proximityType:"",
+    stayLengthDays:"",
+    date:"",
+    whatTypeRelocationBenifit
+:"",   
   });
+  
   
   const [errors, setErrors] = useState({
     firstName: '',
@@ -66,112 +67,67 @@ function LandingPage() {
     stayLengthDays:"",
     date:"",
     whatTypeRelocationBenifit:"",
+    lastPageError:"",
     
     
   });
+
   const handleProximityChange = (e) => {
     const selectedValue = e.target.value;
-  
-    setFormData((prevData) => ({
-      ...prevData,
-      proximityType: selectedValue,
-    }));
+    setFormData((prevData) => ({...prevData,proximityType: selectedValue,}));
   };
-  const handleHowDoYouHearAboutUs=(e)=>{
-    setFormData((prevData)=>({
-        ...prevData,
-        handleHowDoYouHearAboutUs:e.target.value,
 
-    }))
-  }
+  const handleHowDoYouHearAboutUs=(e)=>{
+    setFormData((prevData)=>({...prevData,howDoYouHearAboutUs:e.target.value,}))}
+
+
   const handleWhatType=(e)=>{
-    setFormData((prevData)=>({
-        ...prevData,
-        whatTypeRelocationBenifit:e.target.value,
-    }))
+    setFormData((prevData)=>({...prevData, whatTypeRelocationBenifit:e.target.value,}))
   }
+
   const handleStayLength=(e)=>{
     const selectedValue = e.target.value;
-    setFormData((prevData)=>({
-        ...prevData,
-        stayLengthDays:selectedValue,
-    }))
+    setFormData((prevData)=>({...prevData,stayLengthDays:selectedValue, }))
   }
   const handledate=(e)=>{
     const selectedValue = e.target.value;
-    setFormData((prevData)=>({
-        ...prevData,
-        date:selectedValue,
-    }))
+    setFormData((prevData)=>({...prevData,date:selectedValue,}))
   }
   
   const handleData = (e) => {
     const { name, value, type, checked } = e.target;
     if (page === 1) {
+
         if (type === "radio" && (value === "email" || value === "phone")) {
-          setErrors((prevErrors) => ({
-            ...prevErrors,
-            [name]: !checked ? `Please select ${name}` : '',
+          setErrors((prevErrors) => ({...prevErrors,[name]: !checked ? `Please select ${name}` : '',}));
+          setFormData((prevData) => ({...prevData,[name]: checked ? value : "",reasonForEnquiry: checked ? value : "", 
           }));
-          setFormData((prevData) => ({
-            ...prevData,
-            [name]: checked ? value : "",
-            reasonForEnquiry: checked ? value : "", 
-          }));
+
         } else if (type === "checkbox") {
-          setFormData((prevData) => ({
-            ...prevData,
-            [name]: checked
-              ? [...prevData[name], value]
-              : prevData[name].filter((item) => item !== value),
+          setFormData((prevData) => ({...prevData,[name]: checked ? [...prevData[name], value] : prevData[name].filter((item) => item !== value),
           }));
         } else {
-          setErrors((prevErrors) => ({
-            ...prevErrors,
-            [name]: '',
-          }));
-          setFormData((prevData) => ({
-            ...prevData,
-            [name]: value,
-          }));
+          setErrors((prevErrors) => ({...prevErrors,[name]: '',}));
+          setFormData((prevData) => ({...prevData,[name]: value,}));
         }
       }
     if(page===2){
         if (type === "radio") {
-            setErrors((prevErrors) => ({
-              ...prevErrors,
-              [name]: !checked ? `Please select ${name}` : '',
+            setErrors((prevErrors) => ({...prevErrors,[name]: !checked ? `Please select ${name}` : '',
             }));
-            setFormData((prevData) => ({
-              ...prevData,
-              [name]: checked ? value : "",
-              reasonForEnquiry: checked ? value : "", 
+            setFormData((prevData) => ({...prevData,[name]: checked ? value : "",reasonForEnquiry: checked ? value : "", 
             }));
-            
     }
      else if (type === "checkbox") {
           if (formData.reasonForEnquiry === "movingArea") {
-            setFormData((prevData) => ({
-              ...prevData,
-              movingAreaFields: checked
-                ? [...prevData.movingAreaFields, value]
-                : prevData.movingAreaFields.filter((item) => item !== value),
-            }));
+            setFormData((prevData) => ({...prevData,movingAreaFields: checked ? [...prevData.movingAreaFields, value] : prevData.movingAreaFields.filter((item) => item !== value),}));
           } else if (formData.reasonForEnquiry === "transitionStLouis") {
-            setFormData((prevData) => ({
-              ...prevData,
-              transitionStLouisFields: checked
-                ? [...prevData.transitionStLouisFields, value]
-                : prevData.transitionStLouisFields.filter((item) => item !== value),
-            }));
-          }
-        }
-    }
-    
-}
+            setFormData((prevData) => ({ ...prevData,transitionStLouisFields: checked ? [...prevData.transitionStLouisFields, value] : prevData.transitionStLouisFields.filter((item) => item !== value), }));
+          }}}}
   
   console.log(formData)
   console.log(page)
+
 const validateFields = () => {
     console.log("Validating fields for page", page);
     const newErrors = {};
@@ -211,28 +167,66 @@ const validateFields = () => {
         return Object.keys(newErrors).length === 0;
       
   };
+
   console.log(errors)
- 
-  const nextPage = () => {
+
+const submitFormToServer = async() => {
+    const newErrors = {};
+    if (
+      formData.proximityType==="" ||
+      formData.stayLengthDays==="" ||
+      formData.date==="" ||
+      formData.bedrooms.length === 0 ||
+      formData.lookingForBedroomType.length === 0 ||
+      formData.handleHowYouHearAboutUs === "" ||
+      formData.whatTypeRelocationBenifit===""
+    ) {
+      newErrors.lastPageError = 'All fields are required';
+      setErrors(newErrors);
+    } else {
+      newErrors.lastPageError = '';
+      setErrors(newErrors);
+      console.log("response succesfully sent", formData);
+
+      const url = "https://a9riyj32x1.execute-api.ap-south-1.amazonaws.com/Prod/producerForTempoLeads";
+      
+      const response = await axios.post(url,formData);
+      const fetchedData=await response.data
+      console.log(fetchedData.message)
+      if (fetchedData.message==="Data Send successfully"){
+        setPage(page - 2)
+        console.log('hi')
+        setFormData({firstName: '',
+        lastName: '',
+        email: '',
+        phoneNumber: '',
+        preferredMethodForContact: "",
+        reasonForEnquiry: "",
+        movingAreaFields:[],
+        transitionStLouisFields:[],
+        bedrooms:[],
+        lookingForBedroomType:[],
+        handleHowDoYouHearAboutUs:"",
+        proximityType:"",
+        stayLengthDays:"",
+        date:"",
+        whatTypeRelocationBenifit
+    :"",   })
+      }
+    }
+  };
+  
+const nextPage = () => {
     if (validateFields()) {
       if (page === 1 && (formData.reasonForEnquiry !== "movingArea" && formData.reasonForEnquiry !== "transitionStLouis")) {
         const selectedContactMethod =
-          formData.reasonForEnquiry === "email"
-            ? ""
-            : formData.reasonForEnquiry === "phone"
-            ? ""
-            : "";
-        setFormData((prevData) => ({
-          ...prevData,
-          reasonForEnquiry: selectedContactMethod,
-        }));
+         formData.reasonForEnquiry === "email" ? "" : formData.reasonForEnquiry === "phone" ? "" : "";
+        setFormData((prevData) => ({...prevData,reasonForEnquiry: selectedContactMethod,}));
       }
-  
       console.log("Moving to next page", page + 1);
       setPage(page + 1);
     }
   };
-  
   
   const prevPage = () => {
     setPage(page - 1);
@@ -240,56 +234,60 @@ const validateFields = () => {
 
   return (
     <div className="main_container">
-     
-      <div>
+      <div className="contact_text_details_container">
+            <h1 className="first_heading">GET IN TOUCH</h1>
+            <h2 className="pleasure_text">It's our <span className="pleasure_text_span">pleasure</span></h2>
+            <h2 className="paragraph">At Arch Interim we have an open-door policy. Give us a call, send us an email, or complete the form below for a dedicated client service representative.</h2>
+            <h2  className="paragraph">Ready to learn more? Fill out this contact form with your information and someone from our team will reach out with the most appropriate solution for your relocation situation!</h2>
+            <div className="contact_phone_log_container">
+            <MdOutlinePhoneAndroid />
+            <h2 className="contact_details_text">645.345.0948</h2>
+            </div>
+            <div className="contact_phone_log_container">
+            <MdOutlineMail/>
+            <h2 className="contact_details_text">info@archinterim.com</h2>
+            </div>
+            <div className="contact_phone_log_container">
+            <SiGooglemaps/>
+            <h2 className="contact_details_text">897 Fee Fee Rd. | St. Louis, MO 63043</h2>
+            </div>
+            <div>
+            <FaLinkedin className="facebook"/>
+            <FaSquareFacebook className="facebook"/>
+            <FaInstagramSquare className="facebook"/>
+            </div>
+      
+        </div>
         <div className="contact_form_main_container">
-          <form>
-            <h1 className="contact_us_text">Contact Us</h1>
-
+          <h1 className="contact_us_text">Contact Us</h1>
+          <div className='page_container'>
+              <div>
+              <div className={page >= 1 ? "page page_active" : "page"}>1</div>
+              </div>
+              <div className={page>=2 ? "hr_line11" :"hr_line1" }/>
+              <div className={page >= 2 ? "page page_active" : "page"}>
+                2
+              </div>
+              <div className={page>=3 ? "hr_line11" :"hr_line1" }/>
+              <div className={page >= 3 ? "page page_active" : "page"}>
+                3
+              </div>
+          </div>
 {page === 1 ? (
               <div className="first_contact_page">
-                <input
-                  type="text"
-                  placeholder="First Name*"
-                  className="input_field"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleData}
-                />
-                {errors.firstName && <p style={{ color: 'red' }}>{errors.firstName}</p>}
+                <input type="text" placeholder="First Name*" className="input_field" name="firstName" value={formData.firstName} onChange={handleData}/>
+                {errors.firstName && <p style={{ color: 'red', fontSize:"12px" }}>{errors.firstName}</p>}
 
-                <input
-                  type="text"
-                  placeholder="Last Name*"
-                  className="input_field"
-                  name="lastName"
-                  value={formData.lastName}
+                <input type="text" placeholder="Last Name*" className="input_field" name="lastName" value={formData.lastName} onChange={handleData} required/>
+                {errors.lastName && <p style={{ color: 'red',fontSize:"12px" }}>{errors.lastName}</p>}
+                <input type="email" placeholder="Email*" className="input_field" name="email" value={formData.email}onChange= {handleData} required/>
+                {errors.email && <p style={{ color: 'red',fontSize:"12px" }}>{errors.email}</p>}
+
+                <input type="tel" placeholder="Phone Number*"  className="input_field" name="phoneNumber" value={formData.phoneNumber}
                   onChange={handleData}
                   required
                 />
-                {errors.lastName && <p style={{ color: 'red' }}>{errors.lastName}</p>}
-
-                <input
-                  type="email"
-                  placeholder="Email*"
-                  className="input_field"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleData}
-                  required
-                />
-                {errors.email && <p style={{ color: 'red' }}>{errors.email}</p>}
-
-                <input
-                  type="tel"
-                  placeholder="Phone Number*"
-                  className="input_field"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleData}
-                  required
-                />
-                {errors.phoneNumber && <p style={{ color: 'red' }}>{errors.phoneNumber}</p>}
+                {errors.phoneNumber && <p style={{ color: 'red',fontSize:"12px" }}>{errors.phoneNumber}</p>}
 
                 <div className="email_container">
                     <label>Preferred method of contact*</label>
@@ -316,8 +314,8 @@ const validateFields = () => {
                     <label className="radio_label">Phone Number</label>
                   </div>
                 </div>
-                {errors.preferredMethodForContact && <p style={{ color: 'red' }}>{errors.preferredMethodForContact}</p>}
-                <div className="button_container">
+                {errors.preferredMethodForContact && <p style={{ color: 'red',fontSize:"12px" }}>{errors.preferredMethodForContact}</p>}
+                <div className="first_page_button_container">
                   <button type="button" className="button" onClick={nextPage}>
                     Next
                   </button>
@@ -351,7 +349,7 @@ const validateFields = () => {
                     onChange={handleData}/>
                 <label htmlFor="transitionStLouis">Transition within ST. Louis</label>
                 </div>
-                {errors.reasonForEnquiry && <p style={{ color: 'red' }}>{errors.reasonForEnquiry}</p>}
+                {errors.reasonForEnquiry && <p style={{ color: 'red' ,fontSize:"12px"}}>{errors.reasonForEnquiry}</p>}
                 </div>
                 <div>
 {formData.reasonForEnquiry === "movingArea" && (
@@ -500,7 +498,7 @@ const validateFields = () => {
                             ...prevErrors,
                             movingAreaFields: "", 
                         }));}}/>Other</label>
-                    {errors.movingAreaFields && <p style={{ color: 'red' }}>{errors.movingAreaFields}</p>}
+                    {errors.movingAreaFields && <p style={{ color: 'red',fontSize:"12px" }}>{errors.movingAreaFields}</p>}
                     </div>)}
                 </div>
 
@@ -526,7 +524,7 @@ const validateFields = () => {
                 }))
                 setErrors((prevErrors) => ({
                     ...prevErrors,
-                    transitionStLouisFields: "", // Corrected the typo here
+                    transitionStLouisFields: "", 
                 }));
                 }}
                         />
@@ -620,15 +618,10 @@ const validateFields = () => {
                 />Other
                 </label>
             
-            {errors.transitionStLouisFields && <p style={{ color: 'red' }}>{errors.transitionStLouisFields}</p>}
+            {errors.transitionStLouisFields && <p style={{ color: 'red',fontSize:"12px" }}>{errors.transitionStLouisFields}</p>}
 </div>)}
-
-
-
-
-
                 </div>
-                <div className='button_container'>
+                <div className='second_page_button_container'>
                   <button type="button" className='button' onClick={prevPage}>Prev</button>
                   <button type="button" className='button' onClick={nextPage}>Next</button>
                 </div>
@@ -636,102 +629,65 @@ const validateFields = () => {
 
             ) : null}
 
-
-
 {page===3 ? <div className="third_container">
+
             <div className='iNeedToBeProximity_container'>
-              <label >I need to be in proximity to...*</label>
-              <select className="select_element" defaultValue="" onChange={handleProximityChange}>
-                {iNeedToBeProximityData.map((option) => (
-                    <option key={option.value} value={option.value} disabled={option.value === ''}>
-                    {option.label}
-                    </option>
-                ))}
-            </select>
+                    <label style={{textAlign:"left"}}>I need to be in proximity to...*</label>
+                    <select className="select_element" value={formData.proximityType} onChange={handleProximityChange}>
+                      {iNeedToBeProximityData.map((option) => ( <option key={option.value} value={option.value} disabled={option.value === ''}> {option.label} </option>))}
+                    </select>
             </div>
-            <div className='stay_length_container'>
-              <label className='stay_length_text'>Stay Length*</label>
-            <select  className="select_element" defaultValue="" onChange={handleStayLength}>
-              {stayLengthFields.map((option)=>(
-                <option key={option.value} value={option.value} disabled={option.value===""}>
-                    {option.label}
-                </option>
-              ))}
-            </select>
-            </div>
-            <div className='arrival_date'>
-              <label className='arrival_data_text'>Arrival date*</label>
-           <input type="date" className='date_field' onChange={handledate}/>
-            </div>
-            <div className='bedrooms_container'>
-              <label>Bedrooms (select all that apply)*</label>
-          <label>
-             <input type="checkbox"   
-                          name="1_bedroom"
-                        value="1_bedroom" checked={formData.bedrooms.includes("1_bedroom")}
-                        onChange={(e) => {
+
+        <div className='stay_length_container'>
+                    <label className='stay_length_text'>Stay Length*</label>
+                      <select className="select_element" value={formData.stayLengthDays}  onChange={handleStayLength}>
+                        {stayLengthFields.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
+                      </select>
+        </div>
+
+      <div className='arrival_date'>
+                  <label className='arrival_data_text' >Arrival date*</label>
+                  <input type="date" className='date_field' value={formData.date}  onChange={handledate}/>
+      </div>
+
+      <div className='bedrooms_container'>
+                  <label style={{textAlign:"left"}}>Bedrooms (select all that apply)*</label>
+                  <label> <input type="checkbox"  name="1_bedroom"   value="1_bedroom" checked={formData.bedrooms.includes("1_bedroom")}
+                            onChange={(e) => {
+                            const { checked } = e.target;
+                            setFormData((prevData) => ({...prevData,  bedrooms: checked  ? [...prevData.bedrooms, "1_bedroom"]  : prevData.bedrooms.filter((value) => value !== "1_bedroom"),
+                            }))}}/>1 Bedroom Studio</label>
+
+                <label>  
+                  <input type="checkbox"  name="2_bedrooms" value="2_bedrooms" checked={formData.bedrooms.includes("2_bedrooms")} onChange={(e) => {
                         const { checked } = e.target;
-                        setFormData((prevData) => ({
-                            ...prevData,
-                            bedrooms: checked
-                            ? [...prevData.bedrooms, "1_bedroom"]
-                            : prevData.bedrooms.filter((value) => value !== "1_bedroom"),
-                        }))
-                        
-                        }}/>1 Bedroom Studio</label>
-          <label> <input type="checkbox"   
-                          name="2_bedrooms"
-                        value="2_bedrooms" checked={formData.bedrooms.includes("2_bedrooms")}
-                        onChange={(e) => {
-                        const { checked } = e.target;
-                        setFormData((prevData) => ({
-                            ...prevData,
-                            bedrooms: checked
-                            ? [...prevData.bedrooms, "2_bedrooms"]
+                        setFormData((prevData) => ({ ...prevData, bedrooms: checked ? [...prevData.bedrooms, "2_bedrooms"]
                             : prevData.bedrooms.filter((value) => value !== "2_bedrooms"),
-                        }))
-                        
-                        }}/>2 Bedrooms</label>
-          <label> <input type="checkbox"   
-                          name="3+_bedrooms"
-                        value="3+_bedrooms" checked={formData.bedrooms.includes("3+_bedrooms")}
+                        })) }}/>2 Bedrooms</label>
+
+                  <label> <input type="checkbox"  name="3+_bedrooms" value="3+_bedrooms" checked={formData.bedrooms.includes("3+_bedrooms")}
                         onChange={(e) => {
                         const { checked } = e.target;
-                        setFormData((prevData) => ({
-                            ...prevData,
-                            bedrooms: checked
-                            ? [...prevData.bedrooms, "3+_bedrooms"]
+                        setFormData((prevData) => ({ ...prevData, bedrooms: checked ? [...prevData.bedrooms, "3+_bedrooms"]
                             : prevData.bedrooms.filter((value) => value !== "3+_bedrooms"),
-                        }))
-                        
-                        }}/>3+ Bedrooms</label>
-            </div>
-            <div className='what_type_container'>
-              <label style={{textAlign:"left"}}>What type of relocation benefit are you working with?*</label>
-              <select className="select_element_what_type_of_relocation" defaultValue="" onChange={handleWhatType}>
-                    {relocationOptions.map((option) => (
-                        <option key={option.value} value={option.value} disabled={option.value === ''}>
-                        {option.label}
-                        </option>
-                    ))}
+                        })) }}/>3+ Bedrooms</label>
+        </div>
+
+      <div className='what_type_container'>
+                      <label style={{textAlign:"left"}}>What type of relocation benefit are you working with?*</label>
+                    <select className="select_element_what_type_of_relocation" value={formData.whatTypeRelocationBenifit} onChange={handleWhatType}>
+                    {relocationOptions.map((option) => ( <option key={option.value} value={option.value} disabled={option.value === ''}> {option.label} </option>))}
                     </select>
             <div className='bedrooms_container2'>
-            <label>
-                <input type="checkbox"
-                    name="I am looking for furnished housing"
-                    value="I am looking for furnished housing"
+                <label style={{textAlign:"left"}}>
+                <input type="checkbox" name="I am looking for furnished housing" value="I am looking for furnished housing"
                     checked={formData.lookingForBedroomType.includes("I am looking for furnished housing")}
-                    onChange={(e) => {
-                    const { checked } = e.target;
-                    setFormData((prevData) => ({
-                        ...prevData,
-                        lookingForBedroomType: checked
+                    onChange={(e) => { const { checked } = e.target; setFormData((prevData) => ({...prevData, lookingForBedroomType: checked
                         ? [...prevData.lookingForBedroomType, "I am looking for furnished housing"]
                         : prevData.lookingForBedroomType.filter((value) => value !== "I am looking for furnished housing"),
-                    }));
+                    })); }}/>I am looking for furnished housing</label>
 
-                    }}/>I am looking for furnished housing</label>
-            <label><input  type="checkbox"
+                <label style={{textAlign:"left"}}><input  type="checkbox"
                     name="I am flexible with the dates of my stay"
                     value="I am flexible with the dates of my stay"
                     checked={formData.lookingForBedroomType.includes("I am flexible with the dates of my stay")}
@@ -745,42 +701,40 @@ const validateFields = () => {
                     }));
 
                     }}/>I am flexible with the dates of my stay</label>
-            <label><input type="checkbox"
+            <label style={{textAlign:"left"}}><input type="checkbox"
                     name="I am flexible with the number of bedrooms"
                     value="I am flexible with the number of bedrooms"
                     checked={formData.lookingForBedroomType.includes("I am flexible with the number of bedrooms")}
                     onChange={(e) => {
                     const { checked } = e.target;
-                    setFormData((prevData) => ({
-                        ...prevData,
-                        lookingForBedroomType: checked
-                        ? [...prevData.lookingForBedroomType, "I am flexible with the number of bedrooms"]
+                    setFormData((prevData) => ({ ...prevData,lookingForBedroomType: checked ? [...prevData.lookingForBedroomType, "I am flexible with the number of bedrooms"]
                         : prevData.lookingForBedroomType.filter((value) => value !== "I am flexible with the number of bedrooms"),
-                    }));
+                    })); }}/>I am flexible with the number of bedrooms</label>
+                  </div>
 
-                    }}/>I am flexible with the number of bedrooms</label>
-            </div>
-            </div>
-            <div className='how_did_hear_container'>
-              <label>How did you hear about us?*</label>
-              <select className="select_element" defaultValue="" onChange={handleHowDoYouHearAboutUs}>
-                {referralOptions.map((option) => (
-                    <option key={option.value} value={option.value} disabled={option.value === ''}>
-                    {option.label}
-                    </option>
-                ))}
+      </div>
+
+      <div className='how_did_hear_container'>
+              <label style={{textAlign:"left"}}>How did you hear about us?*</label>
+              <select className="select_element" value={formData.howDoYouHearAboutUs} onChange={handleHowDoYouHearAboutUs}>
+                {referralOptions.map((option) => ( <option key={option.value} value={option.value} >
+                    {option.label} </option>))}
                 </select>
-            </div>
-            <div className='button_container'>
+                {errors.lastPageError && <p style={{ color: 'red' ,fontSize:"12px"}}>{errors.lastPageError}</p>}
+      </div>
+
+
+      <div className='third_page_button_container'>
                 <button type="button" className='button' onClick={prevPage}>Prev</button> 
-                  <button type="button" className='button' >Send</button> </div>
+                <button type="button" className='button' onClick={submitFormToServer}>Send</button>
+      </div>
            
           </div>
         :null }
-          </form>
+          
         </div>
       </div>
-    </div>
+   
   );
 }
 
