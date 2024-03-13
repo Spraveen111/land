@@ -5,14 +5,32 @@ import { SiGooglemaps } from "react-icons/si";
 import { FaSquareFacebook } from "react-icons/fa6";
 import { FaLinkedin } from "react-icons/fa";
 import { FaInstagramSquare } from "react-icons/fa";
+
 import axios from "axios";
 import "./LandingPage.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function LandingPage() {
   const [page, setPage] = useState(1);
   const iNeedToBeProximityData = [{ value: '', label: '--Select an option--' },{ value: 'Corporate Headquarters', label: 'Corporate Headquarters' },{ value: 'University', label: 'University' },{ value: 'Hospitals', label: 'Hospitals' },{ value: 'No specific area required', label: 'No specific area required' },];
+  const [num1, setNum1] = useState(null);
+  const [num2, setNum2] = useState(null);
+  const [answer, setAnswer] = useState(null);
+  const [correct, setCorrect] = useState(false);
+  const [sucess,setSucess]=useState(false);
+  useEffect(() => {
+    generateRandomNumbers();
+  }, []);
+  const generateRandomNumbers = () => {
+    const randomNumber1 = Math.floor(Math.random() * 20) + 1;
+    const randomNumber2 = Math.floor(Math.random() * 20) + 1;
+    setNum1(randomNumber1);
+    setNum2(randomNumber2);
+    setAnswer(null);
+    setCorrect(false);
+  };
 
+ 
   const stayLengthFields=[
     {value:'',label: '--Select an option--'},
     {value:"30-60 days", label:"30-60 days"},
@@ -34,6 +52,22 @@ function LandingPage() {
     { value: 'Referred by employer', label: 'Referred by employer' },
     { value: 'Other', label: 'Other' },
   ];
+  const movingAreaOptions = [
+    { value: "Work", label: "Work" },
+    { value: "Company on behalf of employee", label: "Company on behalf of employee" },
+    { value: "Retirement", label: "Retirement" },
+    { value: "Healthcare access", label: "Healthcare access" },
+    { value: "Family Events", label: "Family Events" },
+    { value: "School education", label: "School education" }
+  ];
+  const transitionStLouisOptions = [
+    { value: "Selling home", label: "Selling home" },
+    { value: "Home renovation", label: "Home renovation" },
+    { value: "Natural disaster", label: "Natural disaster" },
+    { value: "Divorce", label: "Divorce" },
+    { value: "Other", label: "Other" }
+  ];
+  
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -51,6 +85,7 @@ function LandingPage() {
     date:"",
     whatTypeRelocationBenifit
 :"",   
+checkingNumberError:"",
   });
   
   
@@ -68,6 +103,7 @@ function LandingPage() {
     date:"",
     whatTypeRelocationBenifit:"",
     lastPageError:"",
+    checkingNumberError:"",
     
     
   });
@@ -75,10 +111,23 @@ function LandingPage() {
   const handleProximityChange = (e) => {
     const selectedValue = e.target.value;
     setFormData((prevData) => ({...prevData,proximityType: selectedValue,}));
+  
   };
 
   const handleHowDoYouHearAboutUs=(e)=>{
-    setFormData((prevData)=>({...prevData,howDoYouHearAboutUs:e.target.value,}))}
+    setFormData((prevData)=>({...prevData,howDoYouHearAboutUs:e.target.value,}))
+    if ( formData.proximityType==="" ||
+    formData.stayLengthDays==="" ||
+    formData.date==="" ||
+    formData.bedrooms.length === 0 ||
+    formData.lookingForBedroomType.length === 0 ||
+    formData.handleHowYouHearAboutUs === "" ||
+    formData.whatTypeRelocationBenifit===""){
+      setErrors((prevErrors)=>({...prevErrors,lastPageError:"All fields are required",}))
+    }else{
+      setErrors((prevErrors)=>({...prevErrors, lastPageError:"", }))
+    }
+  }
 
 
   const handleWhatType=(e)=>{
@@ -93,11 +142,12 @@ function LandingPage() {
     const selectedValue = e.target.value;
     setFormData((prevData)=>({...prevData,date:selectedValue,}))
   }
+
   
   const handleData = (e) => {
     const { name, value, type, checked } = e.target;
     if (page === 1) {
-
+      
         if (type === "radio" && (value === "email" || value === "phone")) {
           setErrors((prevErrors) => ({...prevErrors,[name]: !checked ? `Please select ${name}` : '',}));
           setFormData((prevData) => ({...prevData,[name]: checked ? value : "",reasonForEnquiry: checked ? value : "", 
@@ -131,6 +181,7 @@ function LandingPage() {
 const validateFields = () => {
     console.log("Validating fields for page", page);
     const newErrors = {};
+    const phoneNumberRegex=/^\d+$/;
     if (page === 1) {
         if (!formData.firstName) {
           newErrors.firstName = 'First Name is required';
@@ -138,11 +189,13 @@ const validateFields = () => {
         if (!formData.lastName) {
           newErrors.lastName = 'Last Name is required';
         }
-        if (!formData.email) {
-          newErrors.email = 'Email is required';
+        
+        if (!formData.email || !formData.email.includes("@")) {
+          newErrors.email = 'Email is required and must be valid';
         }
-        if (!formData.phoneNumber) {
-          newErrors.phoneNumber = 'Phone Number is required';
+        
+        if (!formData.phoneNumber || !phoneNumberRegex.test(formData.phoneNumber)) {
+          newErrors.phoneNumber = 'Please enter a valid phone number';
         }
         if (!formData.preferredMethodForContact) {
           newErrors.preferredMethodForContact = 'Please select a contact method';
@@ -178,12 +231,14 @@ const submitFormToServer = async() => {
       formData.date==="" ||
       formData.bedrooms.length === 0 ||
       formData.lookingForBedroomType.length === 0 ||
-      formData.handleHowYouHearAboutUs === "" ||
+      formData.howDoYouHearAboutUs === "" ||
       formData.whatTypeRelocationBenifit===""
     ) {
       newErrors.lastPageError = 'All fields are required';
       setErrors(newErrors);
     } else {
+      console.log(num1,num2,answer)
+      if(num1+num2===parseInt(answer)){
       newErrors.lastPageError = '';
       setErrors(newErrors);
       console.log("response succesfully sent", formData);
@@ -193,6 +248,9 @@ const submitFormToServer = async() => {
       const response = await axios.post(url,formData);
       const fetchedData=await response.data
       console.log(fetchedData.message)
+      setAnswer(null)
+      setSucess(true)
+      generateRandomNumbers()
       if (fetchedData.message==="Data Send successfully"){
         setPage(page - 2)
         console.log('hi')
@@ -211,8 +269,13 @@ const submitFormToServer = async() => {
         stayLengthDays:"",
         date:"",
         whatTypeRelocationBenifit
-    :"",   })
+    :"", checkingNumberError:" "  })
       }
+      }else{
+        newErrors.checkingNumberError="Please calculate Correctly"
+        setErrors(newErrors)
+      }
+      
     }
   };
   
@@ -234,7 +297,7 @@ const nextPage = () => {
 
   return (
     <div className="main_container">
-      <div className="contact_text_details_container">
+       <div className="contact_text_details_container">
             <h1 className="first_heading">GET IN TOUCH</h1>
             <h2 className="pleasure_text">It's our <span className="pleasure_text_span">pleasure</span></h2>
             <h2 className="paragraph">At Arch Interim we have an open-door policy. Give us a call, send us an email, or complete the form below for a dedicated client service representative.</h2>
@@ -259,6 +322,8 @@ const nextPage = () => {
       
         </div>
         <div className="contact_form_main_container">
+          <div className='second'>
+          {sucess ? <p style={{color:"#6B6D6B"}}>YOUR REQUEST WAS SUBMITTED SUCCESSFULLY! 🎉 SOMEONE FROM OUR TEAM WILL BE IN TOUCH SOON.</p>:null}
           <h1 className="contact_us_text">Contact Us</h1>
           <div className='page_container'>
               <div>
@@ -275,46 +340,32 @@ const nextPage = () => {
           </div>
 {page === 1 ? (
               <div className="first_contact_page">
-                <input type="text" placeholder="First Name*" className="input_field" name="firstName" value={formData.firstName} onChange={handleData}/>
-                {errors.firstName && <p style={{ color: 'red', fontSize:"12px" }}>{errors.firstName}</p>}
+                <input type="text" placeholder="First Name*" className="input_field text_color" name="firstName" value={formData.firstName} onChange={handleData}/>
+                {errors.firstName && <p style={{ color: 'red', fontSize:"12px", marginTop:"0px",paddingBottom:"5px"}}>{errors.firstName}</p>}
 
-                <input type="text" placeholder="Last Name*" className="input_field" name="lastName" value={formData.lastName} onChange={handleData} required/>
-                {errors.lastName && <p style={{ color: 'red',fontSize:"12px" }}>{errors.lastName}</p>}
-                <input type="email" placeholder="Email*" className="input_field" name="email" value={formData.email}onChange= {handleData} required/>
-                {errors.email && <p style={{ color: 'red',fontSize:"12px" }}>{errors.email}</p>}
+                <input type="text" placeholder="Last Name*" className="input_field text_color" name="lastName" value={formData.lastName} onChange={handleData} required/>
+                {errors.lastName && <p style={{ color: 'red',fontSize:"12px", marginTop:"0px",paddingBottom:"5px" }}>{errors.lastName}</p>}
+                <input type="email" placeholder="Email*" className="input_field text_color" name="email" value={formData.email}onChange= {handleData} required/>
+                {errors.email && <p style={{ color: 'red',fontSize:"12px", marginTop:"0px",paddingBottom:"5px" }}>{errors.email}</p>}
 
-                <input type="tel" placeholder="Phone Number*"  className="input_field" name="phoneNumber" value={formData.phoneNumber}
+                <input type="tel" placeholder="Phone Number*"  className="input_field text_color" name="phoneNumber" value={formData.phoneNumber}
                   onChange={handleData}
                   required
                 />
-                {errors.phoneNumber && <p style={{ color: 'red',fontSize:"12px" }}>{errors.phoneNumber}</p>}
+                {errors.phoneNumber && <p style={{ color: 'red',fontSize:"12px", marginTop:"0px",paddingBottom:"5px" }}>{errors.phoneNumber}</p>}
 
                 <div className="email_container">
-                    <label>Preferred method of contact*</label>
+                    <label style={{textAlign:"left"}} className='text_color'>Preferred method of contact<span className="star">*</span></label>
                   <div className="email">
-                    <input
-                      type="radio"
-                      name="preferredMethodForContact"
-                      value="email"
-                      checked={formData.preferredMethodForContact === "email"}
-                      onChange={handleData}
-                      required
-                    />
-                    <label className="radio_label">Email</label>
+                      <input id="email" type="radio" name="preferredMethodForContact" value="email" checked={formData.preferredMethodForContact === "email"} onChange={handleData} className='text_color'required />
+                       <label htmlFor='email' className="radio_label text_color" style={{fontSize:"15px",paddingLeft:"3px"}}>Email</label>
                   </div>
                   <div className="phone_number">
-                    <input
-                      type="radio"
-                      name="preferredMethodForContact"
-                      value="phone"
-                      checked={formData.preferredMethodForContact === "phone"}
-                      onChange={handleData}
-                      required
-                    />
-                    <label className="radio_label">Phone Number</label>
+                    <input id='phoneNumber' type="radio"  name="preferredMethodForContact" value="phone"  className='text_color' checked={formData.preferredMethodForContact === "phone"} onChange={handleData}required />
+                    <label htmlFor='phoneNumber' className="radio_label text_color"  style={{fontSize:"15px",paddingLeft:"3px"}}>Phone Number</label>
                   </div>
                 </div>
-                {errors.preferredMethodForContact && <p style={{ color: 'red',fontSize:"12px" }}>{errors.preferredMethodForContact}</p>}
+                {errors.preferredMethodForContact && <p style={{ color: 'red',fontSize:"12px", marginTop:"0px",paddingBottom:"5px" }}>{errors.preferredMethodForContact}</p>}
                 <div className="first_page_button_container">
                   <button type="button" className="button" onClick={nextPage}>
                     Next
@@ -326,300 +377,74 @@ const nextPage = () => {
 {page === 2 ? (
               <div className="second_page_container">
                 <div className='reasonForInquiryContainer'>
-                <label htmlFor="movingArea">Reason for inquiry*</label>
-                <div className='movingArea'>
-                    <input
-                    type="radio"
-                    id="movingArea"
-                    name="reasonForEnquiry"
-                    value="movingArea"
-                    checked={formData.reasonForEnquiry === "movingArea"}
-                    onChange={handleData}
-                    required
-                    />
-                <label htmlFor="movingArea">Moving area</label>
-                </div>
-                <div className='movingArea'>
-                    <input
-                    type="radio"
-                    id="transitionStLouis"
-                    name="reasonForEnquiry"
-                    value="transitionStLouis"
-                    checked={formData.reasonForEnquiry === "transitionStLouis"}
-                    onChange={handleData}/>
-                <label htmlFor="transitionStLouis">Transition within ST. Louis</label>
+                  <label htmlFor="movingArea" className='text_color'>Reason for inquiry<span className="star">*</span></label>
+                  <div className='movingArea'>
+                  <input type="radio" id="movingArea" name="reasonForEnquiry" value="movingArea" checked={formData.reasonForEnquiry === "movingArea"} onChange={handleData} required />
+                  <label htmlFor="movingArea"  style={{fontSize:"15px", paddingLeft:"4px"}} className='text_color'>Moving area</label>
+                  </div>
+              <div className='movingArea'>
+                  <input type="radio" id="transitionStLouis" name="reasonForEnquiry" value="transitionStLouis" checked={formData.reasonForEnquiry === "transitionStLouis"}onChange={handleData}/>
+                <label htmlFor="transitionStLouis" className='text_color'  style={{fontSize:"15px", paddingLeft:"4px"}}>Transition within ST. Louis</label>
                 </div>
                 {errors.reasonForEnquiry && <p style={{ color: 'red' ,fontSize:"12px"}}>{errors.reasonForEnquiry}</p>}
                 </div>
                 <div>
-{formData.reasonForEnquiry === "movingArea" && (
-                <div className="movingAreaFileds">
-                    <label className="moving_area_fields">Moving to area for....*</label>
-                        <label className="moving_area_fields">
-                        <input
-                            type="checkbox"
-                          name="movingAreaFields"
-                        value="Work"
-                        checked={formData.movingAreaFields.includes("Work")}
-                        onChange={(e) => {
-                        const { checked } = e.target;
-                        setFormData((prevData) => ({
-                            ...prevData,
-                            movingAreaFields: checked
-                            ? [...prevData.movingAreaFields, "Work"]
-                            : prevData.movingAreaFields.filter((value) => value !== "Work"),
-                        }))
-                        setErrors((prevErrors) => ({
-                            ...prevErrors,
-                            movingAreaFields: "", 
-                        }));
-                        }}/>Work</label>
-                    <label className="moving_area_fields">
+                {formData.reasonForEnquiry === "movingArea" && (
+  <div className="movingAreaFileds">
+                <label className="moving_area_fields text_color">Moving to area for....<span className="star">*</span></label>
+                {movingAreaOptions.map(option => (
+                  <label key={option.value} className="moving_area_fields text_color" style={{ fontSize: "15.5px" }}>
                     <input
-                        type="checkbox"
-                        name="movingAreaFields"
-                        value="Company on behalf of employee"
-                        checked={formData.movingAreaFields.includes("Company on behalf of employee")}
-                        onChange={(e) => {
+                      type="checkbox"
+                      name="movingAreaFields"
+                      value={option.value}
+                      checked={formData.movingAreaFields.includes(option.value)}
+                      onChange={(e) => {
                         const { checked } = e.target;
                         setFormData((prevData) => ({
-                            ...prevData,
-                            movingAreaFields: checked
-                            ? [...prevData.movingAreaFields, "Company on behalf of employee"]
-                            : prevData.movingAreaFields.filter((value) => value !== "Company on behalf of employee"),
+                          ...prevData,
+                          movingAreaFields: checked
+                            ? [...prevData.movingAreaFields, option.value]
+                            : prevData.movingAreaFields.filter((value) => value !== option.value),
                         }));
-                        setErrors((prevErrors) => ({
-                            ...prevErrors,
-                            movingAreaFields: "", // Corrected the typo here
-                        }));
-                        }}
+                        setErrors((prevErrors) => ({ ...prevErrors, movingAreaFields: "" }));
+                      }}
                     />
-                    Company on behalf of employee
-                    </label>
-                    <label className="moving_area_fields">
-                    <input
-                        type="checkbox"
-                        name="movingAreaFields"
-                        value="Retirement"
-                        checked={formData.movingAreaFields.includes("Retirement")}
-                        onChange={(e) => {
-                        const { checked } = e.target;
-                        setFormData((prevData) => ({
-                            ...prevData,
-                            movingAreaFields: checked
-                            ? [...prevData.movingAreaFields, "Retirement"]
-                            : prevData.movingAreaFields.filter((value) => value !== "Retirement"),
-                        }));
-                        setErrors((prevErrors) => ({
-                            ...prevErrors,
-                            movingAreaFields: "", 
-                        }));
-                        }}
-                    />
-                    Retirement
-                    </label>
-                    <label className="moving_area_fields">
-                    <input
-                        type="checkbox"
-                        name="movingAreaFields"
-                        value="Healthcare access"
-                        checked={formData.movingAreaFields.includes("Healthcare access")}
-                        onChange={(e) => {
-                        const { checked } = e.target;
-                        setFormData((prevData) => ({
-                            ...prevData,
-                            movingAreaFields: checked
-                            ? [...prevData.movingAreaFields, "Healthcare access"]
-                            : prevData.movingAreaFields.filter((value) => value !== "Healthcare access"),
-                        }));
-                        setErrors((prevErrors) => ({
-                            ...prevErrors,
-                            movingAreaFields: "", 
-                        }));
-                        }}
-                    />
-                    Healthcare access
-                    </label>
-                    <label className="moving_area_fields">
-                    <input
-                        type="checkbox"
-                        name="movingAreaFields"
-                        value="Family Events"
-                        checked={formData.movingAreaFields.includes("Family Events")}
-                        onChange={(e) => {
-                        const { checked } = e.target;
-                        setFormData((prevData) => ({
-                            ...prevData,
-                            movingAreaFields: checked
-                            ? [...prevData.movingAreaFields, "Family Events"]
-                            : prevData.movingAreaFields.filter((value) => value !== "Family Events"),
-                        }));
-                        setErrors((prevErrors) => ({
-                            ...prevErrors,
-                            movingAreaFields: "", 
-                        }));
-                        }}
-                    />
-                    Family Events
-                    </label>
-                    <label className="moving_area_fields">
-                    <input
-                        type="checkbox"
-                        name="movingAreaFields"
-                        value="School education"
-                        checked={formData.movingAreaFields.includes("School education")}
-                        onChange={(e) => {
-                        const { checked } = e.target;
-                        setFormData((prevData) => ({
-                            ...prevData,
-                            movingAreaFields: checked
-                            ? [...prevData.movingAreaFields, "School education"]
-                            : prevData.movingAreaFields.filter((value) => value !== "School education"),
-                        }));
-                        }}
-                    />
-                    School education
-                    </label>
-                    <label className="moving_area_fields">
-                    <input
-                        type="checkbox"
-                        name="movingAreaFields"
-                        value="Other"
-                        checked={formData.movingAreaFields.includes("Other")}
-                        onChange={(e) => {
-                        const { checked } = e.target;
-                        setFormData((prevData) => ({
-                            ...prevData,
-                            movingAreaFields: checked
-                            ? [...prevData.movingAreaFields, "Other"]
-                            : prevData.movingAreaFields.filter((value) => value !== "Other"),
-                        }));
-                        setErrors((prevErrors) => ({
-                            ...prevErrors,
-                            movingAreaFields: "", 
-                        }));}}/>Other</label>
-                    {errors.movingAreaFields && <p style={{ color: 'red',fontSize:"12px" }}>{errors.movingAreaFields}</p>}
-                    </div>)}
-                </div>
+                    {option.label}
+                  </label>
+                ))}
+                {errors.movingAreaFields && <p style={{ color: 'red', fontSize: "12px" }}>{errors.movingAreaFields}</p>}
+              </div>
+            )} </div>
+              <div>
+                    {formData.reasonForEnquiry === "transitionStLouis" && (
+                      <div className="transitionStLouis">
+                        <label className="moving_area_fields text_color" >Transitioning within St Louis for...<span className="star">*</span></label>
+                        {transitionStLouisOptions.map(option => (
+                          <label key={option.value} className="moving_area_fields text_color" style={{fontSize:"15.5px"}}>
+                            <input
+                              type="checkbox"
+                              name="transitionStLouisFields"
+                              value={option.value}
+                              checked={formData.transitionStLouisFields.includes(option.value)}
+                              onChange={(e) => {
+                                const { checked } = e.target;
+                                setFormData((prevData) => ({
+                                  ...prevData,
+                                  transitionStLouisFields: checked
+                                    ? [...prevData.transitionStLouisFields, option.value]
+                                    : prevData.transitionStLouisFields.filter((value) => value !== option.value),
+                                }));
+                                setErrors((prevErrors) => ({ ...prevErrors, transitionStLouisFields: "" }));
+                              }}
+                            />
+                            {option.label}
+                          </label>
+                        ))}
+                        {errors.transitionStLouisFields && <p style={{ color: 'red', fontSize: "12px",marginTop:"0px",paddingBottom:"5px" }}>{errors.transitionStLouisFields}</p>}
+                      </div>
+                    )}
 
-
-<div>
-{formData.reasonForEnquiry === "transitionStLouis" && (
-                <div className="transitionStLouis">
-                <label className="moving_area_fields">Transitioning within St Louis for...*</label>
-                <label className="moving_area_fields">
-                <input
-                type="checkbox"
-                name="transitionStLouisFields"
-                value="Selling home"
-                checked={formData.transitionStLouisFields.includes("Selling home")}
-                onChange={(e) => {
-                const { checked } = e.target;
-                setFormData((prevData) => ({
-                    ...prevData,
-                    transitionStLouisFields: checked
-                    ? [...prevData.transitionStLouisFields, "Selling home"]
-                    : prevData.transitionStLouisFields.filter((value) => value !== "Selling home"),
-                
-                }))
-                setErrors((prevErrors) => ({
-                    ...prevErrors,
-                    transitionStLouisFields: "", 
-                }));
-                }}
-                        />
-                        Selling home
-                        </label>
-                        <label className="moving_area_fields">
-                        <input
-                type="checkbox"
-                name="transitionStLouisFields"
-                value="Home renovation"
-                checked={formData.transitionStLouisFields.includes("Home renovation")}
-                onChange={(e) => {
-                    const { checked } = e.target;
-                    setFormData((prevData) => ({
-                        ...prevData,
-                        transitionStLouisFields: checked
-                            ? [...prevData.transitionStLouisFields, "Home renovation"]
-                            : prevData.transitionStLouisFields.filter((value) => value !== "Home renovation"),
-                    }));
-                    setErrors((prevErrors) => ({
-                        ...prevErrors,
-                        transitionStLouisFields: "", // Corrected the typo here
-                    }));
-                }}
-            />
-                Home renovation
-                </label>
-                <label className="moving_area_fields">
-                <input
-                    type="checkbox"
-                    name="transitionStLouisFields"
-                    value="Natural disaster"
-                    checked={formData.transitionStLouisFields.includes("Natural disaster")}
-                    onChange={(e) => {
-                    const { checked } = e.target;
-                    setFormData((prevData) => ({
-                        ...prevData,
-                        transitionStLouisFields: checked
-                        ? [...prevData.transitionStLouisFields, "Natural disaster"]
-                        : prevData.transitionStLouisFields.filter((value) => value !== "Natural disaster"),
-                    }));
-                    setErrors((prevErrors) => ({
-                        ...prevErrors,
-                        transitionStLouisFields: "", // Corrected the typo here
-                    }));
-                    }}
-                />
-                Natural disaster
-                </label>
-                <label className="moving_area_fields">
-                <input
-                    type="checkbox"
-                    name="transitionStLouisFields"
-                    value="Divorce"
-                    checked={formData.transitionStLouisFields.includes("Divorce")}
-                    onChange={(e) => {
-                    const { checked } = e.target;
-                    setFormData((prevData) => ({
-                        ...prevData,
-                        transitionStLouisFields: checked
-                        ? [...prevData.transitionStLouisFields, "Divorce"]
-                        : prevData.transitionStLouisFields.filter((value) => value !== "Divorce"),
-                    }));
-                    setErrors((prevErrors) => ({
-                        ...prevErrors,
-                        transitionStLouisFields: "", // Corrected the typo here
-                    }));
-                    }}
-                />
-                Divorce
-                </label>
-                <label className="moving_area_fields">
-                <input
-                    type="checkbox"
-                    name="transitionStLouisFields"
-                    value="Other"
-                    checked={formData.transitionStLouisFields.includes("Other")}
-                    onChange={(e) => {
-                    const { checked } = e.target;
-                    setFormData((prevData) => ({
-                        ...prevData,
-                        transitionStLouisFields: checked
-                        ? [...prevData.transitionStLouisFields, "Other"]
-                        : prevData.transitionStLouisFields.filter((value) => value !== "Other"),
-                    }));
-                    setErrors((prevErrors) => ({
-                        ...prevErrors,
-                        transitionStLouisFields: "", // Corrected the typo here
-                    }));
-                    }}
-                />Other
-                </label>
-            
-            {errors.transitionStLouisFields && <p style={{ color: 'red',fontSize:"12px" }}>{errors.transitionStLouisFields}</p>}
-</div>)}
                 </div>
                 <div className='second_page_button_container'>
                   <button type="button" className='button' onClick={prevPage}>Prev</button>
@@ -632,40 +457,40 @@ const nextPage = () => {
 {page===3 ? <div className="third_container">
 
             <div className='iNeedToBeProximity_container'>
-                    <label style={{textAlign:"left"}}>I need to be in proximity to...*</label>
-                    <select className="select_element" value={formData.proximityType} onChange={handleProximityChange}>
-                      {iNeedToBeProximityData.map((option) => ( <option key={option.value} value={option.value} disabled={option.value === ''}> {option.label} </option>))}
+                    <label style={{textAlign:"left"}} className='text_color'>I need to be in proximity to...<span className="star">*</span></label>
+                    <select className="select_element text_color" value={formData.proximityType} onChange={handleProximityChange}>
+                      {iNeedToBeProximityData.map((option) => ( <option className='text_color' key={option.value} value={option.value} disabled={option.value === ''}> {option.label} </option>))}
                     </select>
             </div>
 
         <div className='stay_length_container'>
-                    <label className='stay_length_text'>Stay Length*</label>
-                      <select className="select_element" value={formData.stayLengthDays}  onChange={handleStayLength}>
-                        {stayLengthFields.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
+                    <label className='stay_length_text text_color' style={{paddingBottom:"3px"}}>Stay Length<span className="star">*</span></label>
+                      <select className="select_element text_color" value={formData.stayLengthDays}  onChange={handleStayLength}>
+                        {stayLengthFields.map((option) => (<option className='text_color' key={option.value} value={option.value}>{option.label}</option>))}
                       </select>
         </div>
 
       <div className='arrival_date'>
-                  <label className='arrival_data_text' >Arrival date*</label>
-                  <input type="date" className='date_field' value={formData.date}  onChange={handledate}/>
+                  <label className='arrival_data_text text_color' style={{paddingBottom:"3px"}} >Arrival date<span className="star">*</span></label>
+                  <input type="date" className='date_field text_color' value={formData.date}  onChange={handledate}/>
       </div>
 
       <div className='bedrooms_container'>
-                  <label style={{textAlign:"left"}}>Bedrooms (select all that apply)*</label>
-                  <label> <input type="checkbox"  name="1_bedroom"   value="1_bedroom" checked={formData.bedrooms.includes("1_bedroom")}
+                  <label style={{textAlign:"left"}} className='text_color'>Bedrooms (select all that apply)<span className="star">*</span></label>
+                  <label className='text_color' style={{fontSize:"15.8px",paddingBottom:"8px",paddingTop:"5px"}}> <input type="checkbox"  name="1_bedroom"   value="1_bedroom" checked={formData.bedrooms.includes("1_bedroom")}
                             onChange={(e) => {
                             const { checked } = e.target;
                             setFormData((prevData) => ({...prevData,  bedrooms: checked  ? [...prevData.bedrooms, "1_bedroom"]  : prevData.bedrooms.filter((value) => value !== "1_bedroom"),
                             }))}}/>1 Bedroom Studio</label>
 
-                <label>  
+                <label style={{fontSize:"15.5px",paddingBottom:"8px"}} className='text_color'>  
                   <input type="checkbox"  name="2_bedrooms" value="2_bedrooms" checked={formData.bedrooms.includes("2_bedrooms")} onChange={(e) => {
                         const { checked } = e.target;
                         setFormData((prevData) => ({ ...prevData, bedrooms: checked ? [...prevData.bedrooms, "2_bedrooms"]
                             : prevData.bedrooms.filter((value) => value !== "2_bedrooms"),
                         })) }}/>2 Bedrooms</label>
 
-                  <label> <input type="checkbox"  name="3+_bedrooms" value="3+_bedrooms" checked={formData.bedrooms.includes("3+_bedrooms")}
+                  <label style={{fontSize:"15.5px",paddingBottom:"8px"}} className='text_color'> <input type="checkbox"  name="3+_bedrooms" value="3+_bedrooms" checked={formData.bedrooms.includes("3+_bedrooms")}
                         onChange={(e) => {
                         const { checked } = e.target;
                         setFormData((prevData) => ({ ...prevData, bedrooms: checked ? [...prevData.bedrooms, "3+_bedrooms"]
@@ -674,12 +499,12 @@ const nextPage = () => {
         </div>
 
       <div className='what_type_container'>
-                      <label style={{textAlign:"left"}}>What type of relocation benefit are you working with?*</label>
-                    <select className="select_element_what_type_of_relocation" value={formData.whatTypeRelocationBenifit} onChange={handleWhatType}>
+                      <label style={{textAlign:"left"}} className='text_color'>What type of relocation benefit are you working with?<span className="star">*</span></label>
+                    <select className="select_element_what_type_of_relocation text_color" value={formData.whatTypeRelocationBenifit} onChange={handleWhatType}>
                     {relocationOptions.map((option) => ( <option key={option.value} value={option.value} disabled={option.value === ''}> {option.label} </option>))}
                     </select>
-            <div className='bedrooms_container2'>
-                <label style={{textAlign:"left"}}>
+            <div  className='bedrooms_container2'>
+                <label className='text_color' style={{textAlign:"left",fontSize:"15.5px",paddingBottom:"8px"}}>
                 <input type="checkbox" name="I am looking for furnished housing" value="I am looking for furnished housing"
                     checked={formData.lookingForBedroomType.includes("I am looking for furnished housing")}
                     onChange={(e) => { const { checked } = e.target; setFormData((prevData) => ({...prevData, lookingForBedroomType: checked
@@ -687,7 +512,7 @@ const nextPage = () => {
                         : prevData.lookingForBedroomType.filter((value) => value !== "I am looking for furnished housing"),
                     })); }}/>I am looking for furnished housing</label>
 
-                <label style={{textAlign:"left"}}><input  type="checkbox"
+                <label style={{textAlign:"left",fontSize:"15.5px",paddingBottom:"8px"}} className='text_color'><input  type="checkbox"
                     name="I am flexible with the dates of my stay"
                     value="I am flexible with the dates of my stay"
                     checked={formData.lookingForBedroomType.includes("I am flexible with the dates of my stay")}
@@ -701,7 +526,7 @@ const nextPage = () => {
                     }));
 
                     }}/>I am flexible with the dates of my stay</label>
-            <label style={{textAlign:"left"}}><input type="checkbox"
+            <label style={{textAlign:"left",fontSize:"15.5px",paddingBottom:"8px"}} className='text_color'><input type="checkbox" 
                     name="I am flexible with the number of bedrooms"
                     value="I am flexible with the number of bedrooms"
                     checked={formData.lookingForBedroomType.includes("I am flexible with the number of bedrooms")}
@@ -715,15 +540,21 @@ const nextPage = () => {
       </div>
 
       <div className='how_did_hear_container'>
-              <label style={{textAlign:"left"}}>How did you hear about us?*</label>
-              <select className="select_element" value={formData.howDoYouHearAboutUs} onChange={handleHowDoYouHearAboutUs}>
-                {referralOptions.map((option) => ( <option key={option.value} value={option.value} >
+              <label style={{textAlign:"left"}} className='text_color'>How did you hear about us?<span className="star">*</span></label>
+              <select className="select_element text_color" value={formData.howDoYouHearAboutUs} onChange={handleHowDoYouHearAboutUs}>
+                {referralOptions.map((option) => ( <option key={option.value} value={option.value} disabled={option.value === ""}>
                     {option.label} </option>))}
                 </select>
                 {errors.lastPageError && <p style={{ color: 'red' ,fontSize:"12px"}}>{errors.lastPageError}</p>}
       </div>
-
-
+      <div className='numbers_container'>
+      <p>{num1} + {num2} = 
+        <input className="numbers_input_field" type="text"  value={answer}  onChange={(e) => setAnswer(e.target.value)} />
+      </p>
+      {errors.checkingNumberError && <p style={{ color: 'red' ,fontSize:"12px",marginTop:"0px",paddingBottom:"6px"}}>{errors.checkingNumberError}</p>}
+   
+    </div>
+     
       <div className='third_page_button_container'>
                 <button type="button" className='button' onClick={prevPage}>Prev</button> 
                 <button type="button" className='button' onClick={submitFormToServer}>Send</button>
@@ -731,7 +562,7 @@ const nextPage = () => {
            
           </div>
         :null }
-          
+          </div>
         </div>
       </div>
    
